@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"redigo/resp"
 )
 
 func main() {
@@ -12,21 +13,22 @@ func main() {
 	ln, err := net.Listen("tcp", ":6379")
 	if err != nil {
 		fmt.Println("TCP Error: ", err)
+		return
 	}
 
 	conn, err := ln.Accept()
 	if err != nil {
 		fmt.Println("Connection Error: ", err)
+		return
 	}
 
 	defer conn.Close()
 
 	for {
-		input := make([]byte, 512)
-		_, err := conn.Read(input)
-		if err != nil {
-			fmt.Println("Reading Error: ", err)
-		}
+		input := resp.Resp_buffer(conn)
+		client_input := resp.Read_buffer(input)
+
+		fmt.Println(client_input)
 
 		conn.Write([]byte("+OK\r\n"))
 	}
