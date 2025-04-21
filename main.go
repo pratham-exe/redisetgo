@@ -25,11 +25,12 @@ func main() {
 	defer conn.Close()
 
 	for {
-		input := resp.Resp_buffer(conn)
+		input := resp.Resp_input_buffer(conn)
 		client_input := resp.Read_buffer(input)
 
 		fmt.Println(client_input)
 
-		conn.Write([]byte("+OK\r\n"))
+		output := resp.Resp_output_buffer(conn)
+		resp.Write_buffer(output, resp.Client_input{Tipe: "string", Str: "Hello"})
 	}
 }

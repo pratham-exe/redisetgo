@@ -8,25 +8,29 @@ import (
 )
 
 const (
-	ARRAY = '*'
-	BULK  = '$'
+	ARRAY   = '*'
+	BULK    = '$'
+	STRING  = '+'
+	INTEGER = ':'
+	ERROR   = '-'
 )
 
 type Client_input struct {
-	tipe  string
-	bulk  string
-	array []Client_input
+	Tipe  string
+	Bulk  string
+	Str   string
+	Array []Client_input
 }
 
-type Buffer struct {
+type Input_buffer struct {
 	reader *bufio.Reader
 }
 
-func Resp_buffer(con io.Reader) *Buffer {
-	return &Buffer{reader: bufio.NewReader(con)}
+func Resp_input_buffer(con io.Reader) *Input_buffer {
+	return &Input_buffer{reader: bufio.NewReader(con)}
 }
 
-func Read_buffer(rb *Buffer) Client_input {
+func Read_buffer(rb *Input_buffer) Client_input {
 	bite, err := rb.reader.ReadByte()
 	if err != nil {
 		fmt.Println("Read Buffer Error: ", err)
@@ -44,36 +48,36 @@ func Read_buffer(rb *Buffer) Client_input {
 	}
 }
 
-func read_array(rb *Buffer) Client_input {
+func read_array(rb *Input_buffer) Client_input {
 	ci := Client_input{}
-	ci.tipe = "Array"
+	ci.Tipe = "Array"
 
 	size := read_size(rb)
-	ci.array = make([]Client_input, size)
+	ci.Array = make([]Client_input, size)
 
 	for i := 0; i < size; i++ {
 		ci_read := Read_buffer(rb)
-		ci.array = append(ci.array, ci_read)
+		ci.Array = append(ci.Array, ci_read)
 	}
 
 	return ci
 }
 
-func read_bulk(rb *Buffer) Client_input {
+func read_bulk(rb *Input_buffer) Client_input {
 	ci := Client_input{}
-	ci.tipe = "Bulk"
+	ci.Tipe = "Bulk"
 
 	size := read_size(rb)
-	bulk_str := make([]byte, size)
-	rb.reader.Read(bulk_str)
-	ci.bulk = string(bulk_str)
+	Bulk_str := make([]byte, size)
+	rb.reader.Read(Bulk_str)
+	ci.Bulk = string(Bulk_str)
 
 	_ = read_line(rb)
 
 	return ci
 }
 
-func read_size(rb *Buffer) int {
+func read_size(rb *Input_buffer) int {
 	line_crlf := read_line(rb)
 
 	i64, err := strconv.ParseInt(string(line_crlf), 10, 64)
@@ -85,7 +89,7 @@ func read_size(rb *Buffer) int {
 	return int(i64)
 }
 
-func read_line(rb *Buffer) (line []byte) {
+func read_line(rb *Input_buffer) (line []byte) {
 	for {
 		bite, err := rb.reader.ReadByte()
 		if err != nil {
