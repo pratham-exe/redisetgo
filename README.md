@@ -1,1 +1,8 @@
-# redisetgo - Redis Server in Go
+# redisetgo
+
+Redis Server in Go.
+
+## TODO
+
+- [ ] AOF
+- [ ] More commands
