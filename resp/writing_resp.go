@@ -42,6 +42,8 @@ func writerr(rsp Client_input) []byte {
 		return writerr_string(rsp)
 	case "error":
 		return writerr_error(rsp)
+	case "nill":
+		return writerr_nill()
 	default:
 		return []byte{}
 	}
@@ -87,4 +89,8 @@ func writerr_error(rsp Client_input) []byte {
 	bites = append(bites, '\r', '\n')
 
 	return bites
+}
+
+func writerr_nill() []byte {
+	return []byte("$-1\r\n")
 }

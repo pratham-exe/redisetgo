@@ -36,6 +36,7 @@ func main() {
 
 		if len(client_input.Array) == 0 {
 			fmt.Println("I want more array length")
+			break
 		}
 
 		input_len := len(client_input.Array) / 2
