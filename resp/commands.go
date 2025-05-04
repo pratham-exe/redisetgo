@@ -1,13 +1,16 @@
 package resp
 
-import "sync"
+import (
+	"sync"
+)
 
 var Command_store = map[string]func([]Client_input) Client_input{
-	"PING": command_ping,
-	"SET":  command_set,
-	"GET":  command_get,
-	"HSET": command_hset,
-	"HGET": command_hget,
+	"PING":    command_ping,
+	"SET":     command_set,
+	"GET":     command_get,
+	"HSET":    command_hset,
+	"HGET":    command_hget,
+	"HGETALL": command_hgetall,
 }
 
 func command_ping(args []Client_input) Client_input {
@@ -101,4 +104,28 @@ func command_hget(args []Client_input) Client_input {
 	}
 
 	return Client_input{Tipe: "bulk", Bulk: hget_comm_value}
+}
+
+func command_hgetall(args []Client_input) Client_input {
+	if len(args) != 1 {
+		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+	}
+
+	hget_comm_hash := args[0].Bulk
+
+	hset_command_mutex.RLock()
+
+	hget_comm_key, ok := hset_command_hashmap[hget_comm_hash]
+	hget_comm_value := []Client_input{}
+	for _, v := range hget_comm_key {
+		hget_comm_value = append(hget_comm_value, Client_input{Tipe: "bulk", Bulk: v})
+	}
+
+	hset_command_mutex.RUnlock()
+
+	if !ok {
+		return Client_input{Tipe: "nill"}
+	}
+
+	return Client_input{Tipe: "array", Array: hget_comm_value}
 }
