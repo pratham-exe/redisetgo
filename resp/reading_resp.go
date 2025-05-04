@@ -43,7 +43,7 @@ func Read_buffer(rb *Input_buffer) Client_input {
 	case BULK:
 		return read_bulk(rb)
 	default:
-		fmt.Printf("Unknown: %v", string(bite))
+		fmt.Printf("IDK: %v", string(bite))
 		return Client_input{}
 	}
 }

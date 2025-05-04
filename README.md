@@ -1,1 +1,1 @@
-# redigo - Redis in Go
+# redisetgo - Redis Server in Go
