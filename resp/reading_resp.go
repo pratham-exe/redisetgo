@@ -50,7 +50,7 @@ func Read_buffer(rb *Input_buffer) Client_input {
 
 func read_array(rb *Input_buffer) Client_input {
 	ci := Client_input{}
-	ci.Tipe = "Array"
+	ci.Tipe = "array"
 
 	size := read_size(rb)
 	ci.Array = make([]Client_input, size)
@@ -65,7 +65,7 @@ func read_array(rb *Input_buffer) Client_input {
 
 func read_bulk(rb *Input_buffer) Client_input {
 	ci := Client_input{}
-	ci.Tipe = "Bulk"
+	ci.Tipe = "bulk"
 
 	size := read_size(rb)
 	Bulk_str := make([]byte, size)

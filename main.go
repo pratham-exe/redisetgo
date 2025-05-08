@@ -17,6 +17,9 @@ func main() {
 		return
 	}
 
+	aof_method := resp.Create_aof("redis.aof")
+	defer resp.Aof_close(aof_method)
+
 	conn, err := ln.Accept()
 	if err != nil {
 		fmt.Println("Connection Error: ", err)
@@ -29,7 +32,7 @@ func main() {
 		input := resp.Resp_input_buffer(conn)
 		client_input := resp.Read_buffer(input)
 
-		if client_input.Tipe != "Array" {
+		if client_input.Tipe != "array" {
 			fmt.Println("I want array type")
 			break
 		}
@@ -50,6 +53,10 @@ func main() {
 			fmt.Println("IDK this command: ", command)
 			resp.Write_buffer(output, resp.Client_input{Tipe: "string", Str: ""})
 			continue
+		}
+
+		if command == "SET" || command == "HSET" {
+			resp.Write_aof(aof_method, client_input)
 		}
 
 		result := command_output(arguments)
