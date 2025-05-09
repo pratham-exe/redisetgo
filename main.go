@@ -20,6 +20,19 @@ func main() {
 	aof_method := resp.Create_aof("redis.aof")
 	defer resp.Aof_close(aof_method)
 
+	resp.Read_aof(aof_method, func(ci resp.Client_input) {
+		command := strings.ToUpper(ci.Array[0].Bulk)
+		arguments := ci.Array[1:]
+
+		command_output, ok := resp.Command_store[command]
+		if !ok {
+			fmt.Println("IDK this command: ", command)
+			return
+		}
+
+		command_output(arguments)
+	})
+
 	conn, err := ln.Accept()
 	if err != nil {
 		fmt.Println("Connection Error: ", err)
@@ -30,7 +43,11 @@ func main() {
 
 	for {
 		input := resp.Resp_input_buffer(conn)
-		client_input := resp.Read_buffer(input)
+		client_input, err := resp.Read_buffer(input)
+		if err != nil {
+			fmt.Println("Read buffer error train: ", err)
+			return
+		}
 
 		if client_input.Tipe != "array" {
 			fmt.Println("I want array type")
@@ -42,9 +59,8 @@ func main() {
 			break
 		}
 
-		input_len := len(client_input.Array) / 2
-		command := strings.ToUpper(client_input.Array[input_len].Bulk)
-		arguments := client_input.Array[input_len+1:]
+		command := strings.ToUpper(client_input.Array[0].Bulk)
+		arguments := client_input.Array[1:]
 
 		output := resp.Resp_output_buffer(conn)
 

@@ -4,5 +4,5 @@ Redis Server in Go.
 
 ## TODO
 
-- [ ] AOF
+- [x] AOF
 - [ ] More commands

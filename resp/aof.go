@@ -3,6 +3,7 @@ package resp
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -55,6 +56,25 @@ func Write_aof(aof_method Aof_method, ci Client_input) error {
 	}
 
 	aof_method.mutex_lock.Unlock()
+
+	return nil
+}
+
+func Read_aof(aof_method Aof_method, call_main func(ci Client_input)) error {
+	aof_method.mutex_lock.Lock()
+	defer aof_method.mutex_lock.Unlock()
+
+	input := Resp_input_buffer(&aof_method.file)
+
+	for {
+		client_input, err := Read_buffer(input)
+		if err == nil {
+			call_main(client_input)
+		}
+		if err == io.EOF {
+			break
+		}
+	}
 
 	return nil
 }
