@@ -5,19 +5,21 @@ import (
 )
 
 var Command_store = map[string]func([]Client_input) Client_input{
-	"PING":    command_ping,
-	"SET":     command_set,
-	"GET":     command_get,
-	"HSET":    command_hset,
-	"HGET":    command_hget,
-	"HGETALL": command_hgetall,
+	"PING":      command_ping,
+	"SET":       command_set,
+	"GET":       command_get,
+	"HSET":      command_hset,
+	"HGET":      command_hget,
+	"HGETALL":   command_hgetall,
+	"DEL":       command_del,
+	"REDISHELP": command_help,
 }
 
 func command_ping(args []Client_input) Client_input {
 	if len(args) == 0 {
 		return Client_input{Tipe: "string", Str: "PONG"}
 	} else if len(args) == 1 {
-		return Client_input{Tipe: "string", Str: args[0].Bulk}
+		return Client_input{Tipe: "bulk", Bulk: args[0].Bulk}
 	}
 	return Client_input{Tipe: "error", Str: "I can take max 1 argument."}
 }
@@ -117,7 +119,8 @@ func command_hgetall(args []Client_input) Client_input {
 
 	hget_comm_key, ok := hset_command_hashmap[hget_comm_hash]
 	hget_comm_value := []Client_input{}
-	for _, v := range hget_comm_key {
+	for k, v := range hget_comm_key {
+		hget_comm_value = append(hget_comm_value, Client_input{Tipe: "bulk", Bulk: k})
 		hget_comm_value = append(hget_comm_value, Client_input{Tipe: "bulk", Bulk: v})
 	}
 
@@ -128,4 +131,32 @@ func command_hgetall(args []Client_input) Client_input {
 	}
 
 	return Client_input{Tipe: "array", Array: hget_comm_value}
+}
+
+func command_del(args []Client_input) Client_input {
+	if len(args) != 1 {
+		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+	}
+
+	del_key := args[0].Bulk
+	delete(set_command_hashmap, del_key)
+
+	return Client_input{Tipe: "string", Str: "OK"}
+}
+
+func command_help(args []Client_input) Client_input {
+	if len(args) != 0 {
+		return Client_input{Tipe: "error", Str: "I take 0 arguments."}
+	}
+
+	return_value := []Client_input{}
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "PING (or) PING <value> (0 or 1 argument)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "SET <key> <value> (2 arguments)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "GET <key> (1 argument)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "HSET <hash> <key> <value> (3 arguments)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "HGET <hash> <key> (2 arguments)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "HGETALL <hash> (1 argument)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "DEL <key> (1 argument)"})
+
+	return Client_input{Tipe: "array", Array: return_value}
 }

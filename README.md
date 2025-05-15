@@ -2,7 +2,6 @@
 
 Redis Server in Go.
 
-## TODO
+## Features
 
-- [x] AOF
-- [ ] More commands
+Use `redishelp` command, look into the commands available and you are good to go.
