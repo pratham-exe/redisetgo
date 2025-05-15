@@ -1,6 +1,7 @@
 package resp
 
 import (
+	"strconv"
 	"sync"
 )
 
@@ -14,6 +15,7 @@ var Command_store = map[string]func([]Client_input) Client_input{
 	"DEL":       command_del,
 	"REDISHELP": command_help,
 	"EXISTS":    command_exists,
+	"INCR":      command_increment,
 }
 
 func command_ping(args []Client_input) Client_input {
@@ -22,7 +24,7 @@ func command_ping(args []Client_input) Client_input {
 	} else if len(args) == 1 {
 		return Client_input{Tipe: "bulk", Bulk: args[0].Bulk}
 	}
-	return Client_input{Tipe: "error", Str: "I can take max 1 argument."}
+	return Client_input{Tipe: "error", Str: "I take max 1 argument."}
 }
 
 var (
@@ -32,7 +34,7 @@ var (
 
 func command_set(args []Client_input) Client_input {
 	if len(args) != 2 {
-		return Client_input{Tipe: "error", Str: "I only take 2 arguments."}
+		return Client_input{Tipe: "error", Str: "I take 2 arguments."}
 	}
 
 	set_comm_key := args[0].Bulk
@@ -47,7 +49,7 @@ func command_set(args []Client_input) Client_input {
 
 func command_get(args []Client_input) Client_input {
 	if len(args) != 1 {
-		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+		return Client_input{Tipe: "error", Str: "I take 1 argument."}
 	}
 
 	get_comm_key := args[0].Bulk
@@ -70,7 +72,7 @@ var (
 
 func command_hset(args []Client_input) Client_input {
 	if len(args) != 3 {
-		return Client_input{Tipe: "error", Str: "I only take 3 arguments."}
+		return Client_input{Tipe: "error", Str: "I take 3 arguments."}
 	}
 
 	hset_comm_hash := args[0].Bulk
@@ -92,7 +94,7 @@ func command_hset(args []Client_input) Client_input {
 
 func command_hget(args []Client_input) Client_input {
 	if len(args) != 2 {
-		return Client_input{Tipe: "error", Str: "I only take 2 arguments."}
+		return Client_input{Tipe: "error", Str: "I take 2 arguments."}
 	}
 
 	hget_comm_hash := args[0].Bulk
@@ -111,7 +113,7 @@ func command_hget(args []Client_input) Client_input {
 
 func command_hgetall(args []Client_input) Client_input {
 	if len(args) != 1 {
-		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+		return Client_input{Tipe: "error", Str: "I take 1 argument."}
 	}
 
 	hget_comm_hash := args[0].Bulk
@@ -136,36 +138,65 @@ func command_hgetall(args []Client_input) Client_input {
 
 func command_del(args []Client_input) Client_input {
 	if len(args) != 1 {
-		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+		return Client_input{Tipe: "error", Str: "I take 1 argument."}
 	}
 
 	del_key := args[0].Bulk
 
 	_, ok := set_command_hashmap[del_key]
 	if !ok {
-		return Client_input{Tipe: "integer", Str: "0"}
+		return Client_input{Tipe: "integer", Num: 0}
 	}
 
 	set_command_mutex.Lock()
 	delete(set_command_hashmap, del_key)
 	set_command_mutex.Unlock()
 
-	return Client_input{Tipe: "integer", Str: "1"}
+	return Client_input{Tipe: "integer", Num: 1}
 }
 
 func command_exists(args []Client_input) Client_input {
 	if len(args) != 1 {
-		return Client_input{Tipe: "error", Str: "I only take 1 argument."}
+		return Client_input{Tipe: "error", Str: "I take 1 argument."}
 	}
 
 	exists_key := args[0].Bulk
 
 	_, ok := set_command_hashmap[exists_key]
 	if !ok {
-		return Client_input{Tipe: "integer", Str: "0"}
+		return Client_input{Tipe: "integer", Num: 0}
 	}
 
-	return Client_input{Tipe: "integer", Str: "1"}
+	return Client_input{Tipe: "integer", Num: 1}
+}
+
+func command_increment(args []Client_input) Client_input {
+	if len(args) != 1 {
+		return Client_input{Tipe: "error", Str: "I take 1 argument."}
+	}
+
+	incr_key := args[0].Bulk
+
+	val, ok := set_command_hashmap[incr_key]
+	if !ok {
+		set_command_mutex.Lock()
+		set_command_hashmap[incr_key] = "1"
+		set_command_mutex.Unlock()
+
+		return Client_input{Tipe: "integer", Num: 1}
+	}
+
+	num, err := strconv.Atoi(val)
+	if err != nil {
+		return Client_input{Tipe: "error", Str: "I cannot increment this value."}
+	}
+
+	num += 1
+	set_command_mutex.Lock()
+	set_command_hashmap[incr_key] = strconv.Itoa(num)
+	set_command_mutex.Unlock()
+
+	return Client_input{Tipe: "integer", Num: num}
 }
 
 func command_help(args []Client_input) Client_input {
@@ -182,6 +213,7 @@ func command_help(args []Client_input) Client_input {
 	return_value = append(return_value, Client_input{Tipe: "string", Str: "HGETALL <hash> (1 argument)"})
 	return_value = append(return_value, Client_input{Tipe: "string", Str: "DEL <key> (1 argument)"})
 	return_value = append(return_value, Client_input{Tipe: "string", Str: "EXISTS <key> (1 argument)"})
+	return_value = append(return_value, Client_input{Tipe: "string", Str: "INCR <key> (1 argument)"})
 
 	return Client_input{Tipe: "array", Array: return_value}
 }

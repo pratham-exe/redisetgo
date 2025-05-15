@@ -100,7 +100,8 @@ func writerr_nill() []byte {
 func writerr_integer(rsp Client_input) []byte {
 	var bites []byte
 	bites = append(bites, INTEGER)
-	bites = append(bites, rsp.Str...)
+	num := strconv.Itoa(rsp.Num)
+	bites = append(bites, num...)
 	bites = append(bites, '\r', '\n')
 
 	return bites

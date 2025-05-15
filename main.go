@@ -71,7 +71,7 @@ func main() {
 			continue
 		}
 
-		if command == "SET" || command == "HSET" || command == "DEL" {
+		if command == "SET" || command == "HSET" || command == "DEL" || command == "INCR" {
 			resp.Write_aof(aof_method, client_input)
 		}
 

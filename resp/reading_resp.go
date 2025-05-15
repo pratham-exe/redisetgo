@@ -19,6 +19,7 @@ type Client_input struct {
 	Tipe  string
 	Bulk  string
 	Str   string
+	Num   int
 	Array []Client_input
 }
 
